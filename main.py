@@ -39,24 +39,6 @@ for filename in file_list:
 
 
 # %%
-class SequenceDataset(D.Dataset):
-    def __init__(self):
-        self.sequence_tensor = T.from_numpy(sequence_matrix)
-        self.sequence_one_hot = F.one_hot(self.sequence_tensor, num_classes=5)
-        self.sequence_one_hot = self.sequence_one_hot.float()
-
-    def __len__(self):
-        return len(self.sequence_one_hot)
-
-    def __getitem__(self, idx):
-        return T.transpose(self.sequence_one_hot[idx, ...], 0, 1)
-
-
-# %%
-train_dataloader = D.DataLoader(SequenceDataset(), batch_size=64, shuffle=True)
-
-
-# %%
 class AE(N.Module):
 
     def __init__(self, **kwargs):
@@ -103,13 +85,13 @@ class AE(N.Module):
 
 # %%
 #  use gpu if available
-# device = T.device("mps" if T.has_mps else "cpu")
-device = 'cpu'
+device = T.device("mps" if T.has_mps else "cpu")
+#device = 'cpu'
 
 # create a model from `AE` autoencoder class
 # load it to the specified device, either gpu or cpu
 full_model = AE(input_shape=(length, 5)).to(device)
-summary(full_model, input_size=(5, 128))
+#summary(full_model, input_size=(5, 128))
 # create an optimizer object
 # Adam optimizer with learning rate 1e-3
 optimizer = optim.Adam(full_model.parameters(), lr=1e-3)
@@ -117,7 +99,26 @@ optimizer = optim.Adam(full_model.parameters(), lr=1e-3)
 # mean-squared error loss
 criterion = N.MSELoss()
 
-epochs = 10
+# %%
+sequence_tensor = T.from_numpy(sequence_matrix).to(device)
+
+class SequenceDataset(D.Dataset):
+    def __init__(self):
+        self.sequence_tensor = sequence_tensor
+        self.sequence_one_hot = F.one_hot(self.sequence_tensor, num_classes=5)
+        self.sequence_one_hot = self.sequence_one_hot.float()
+
+    def __len__(self):
+        return len(self.sequence_one_hot)
+
+    def __getitem__(self, idx):
+        return T.transpose(self.sequence_one_hot[idx, ...], 0, 1)
+
+
+# %%
+train_dataloader = D.DataLoader(SequenceDataset(), batch_size=64, shuffle=True)
+
+epochs = 100
 for epoch in range(epochs):
     loss = 0
     for inputs in train_dataloader:
