@@ -91,7 +91,8 @@ device = T.device("mps" if T.has_mps else "cpu")
 # create a model from `AE` autoencoder class
 # load it to the specified device, either gpu or cpu
 full_model = AE(input_shape=(length, 5)).to(device)
-#summary(full_model, input_size=(5, 128))
+summary(AE(input_shape=(length, 5)).to('cpu'), input_size=(5, 128))
+
 # create an optimizer object
 # Adam optimizer with learning rate 1e-3
 optimizer = optim.Adam(full_model.parameters(), lr=1e-3)
